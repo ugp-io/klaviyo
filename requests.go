@@ -10,6 +10,8 @@ type Client struct {
 	APIKey    string
 	APISecret string
 	Profile   ProfileService
+	Event     EventService
+	Metric    MetricService
 }
 
 func NewClient(apiKey string) *Client {
@@ -19,6 +21,8 @@ func NewClient(apiKey string) *Client {
 	}
 
 	c.Profile = &ProfileServiceOp{client: c}
+	c.Event = &EventServiceOp{client: c}
+	c.Metric = &MetricServiceOp{client: c}
 
 	return c
 
@@ -40,6 +44,10 @@ func (c *Client) Request(method string, url string, body strings.Reader, v inter
 	//Client
 	client := &http.Client{}
 	resp, errDo := client.Do(httpReq)
+
+	// fmt.Println(resp)
+	// fmt.Println()
+	// fmt.Println(errDo)
 
 	if resp != nil {
 		defer resp.Body.Close()
