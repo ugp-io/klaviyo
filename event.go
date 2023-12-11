@@ -147,7 +147,9 @@ func (s *EventServiceOp) Create(ctx context.Context, params CreateEvent) (*Event
 			fmt.Sprintf("\"profile\":{\"data\":{\"type\":\"profile\",\"attributes\":{%v}}}", strings.Join(eventProfileBuild, ",")))
 	}
 
-	eventBuild = append(eventBuild, "\"unique_id\":\"1702060556\"")
+	if params.UniqueID != nil {
+		eventBuild = append(eventBuild, "\"unique_id\":\""+*params.UniqueID+"\"")
+	}
 
 	payloadString := fmt.Sprintf("{\"data\":{\"type\":\"event\",\"attributes\":{%v}}}", strings.Join(eventBuild, ","))
 	payload := strings.NewReader(payloadString)
