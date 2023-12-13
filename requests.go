@@ -12,6 +12,8 @@ type Client struct {
 	Profile   ProfileService
 	Event     EventService
 	Metric    MetricService
+	Tag       TagService
+	Coupon    CouponService
 }
 
 func NewClient(apiKey string) *Client {
@@ -23,6 +25,8 @@ func NewClient(apiKey string) *Client {
 	c.Profile = &ProfileServiceOp{client: c}
 	c.Event = &EventServiceOp{client: c}
 	c.Metric = &MetricServiceOp{client: c}
+	c.Tag = &TagServiceOp{client: c}
+	c.Coupon = &CouponServiceOp{client: c}
 
 	return c
 
