@@ -59,15 +59,15 @@ type BrowseRequest struct {
 type CreateEvent struct {
 	CreateEventProperties *map[string]string
 	Time                  *string
-	CreateEventMetric     *struct {
-		Name    *string
-		Service *string
-	}
-	CreateEventProfile *struct {
-		Email *string
-		Value *int
-	}
-	UniqueID *string
+	Value                 *int
+	UniqueID              *string
+	CreateEventMetric     *CreateEventMetric
+	CreateEventProfile    *CreateProfile
+}
+
+type CreateEventMetric struct {
+	Name    string
+	Service *string
 }
 
 const eventURL = "https://a.klaviyo.com/api/events/"
@@ -118,15 +118,24 @@ func (s *EventServiceOp) Create(ctx context.Context, params CreateEvent) (*Event
 	if params.CreateEventMetric != nil {
 		createEventMetric := params.CreateEventMetric
 
-		var eventMetricBuild []string
-		if createEventMetric.Name != nil {
-			eventMetricBuild = append(eventMetricBuild, "\"name\":\""+*createEventMetric.Name+"\"")
+		eventMetricBuild := []string{
+			"\"name\":\"" + createEventMetric.Name + "\"",
 		}
+
 		if createEventMetric.Service != nil {
-			eventMetricBuild = append(eventMetricBuild, "\"service\":\""+*createEventMetric.Service+"\"")
+			eventMetricBuild = append(eventMetricBuild,
+				"\"service\":\""+*createEventMetric.Service+"\"")
 		}
 		eventBuild = append(eventBuild,
-			fmt.Sprintf("\"metric\":{\"data\":{\"type\":\"metric\",\"attributes\":{%v}}}", strings.Join(eventMetricBuild, ",")))
+			fmt.Sprintf("\"metric\":{\"data\":{\"type\":\"metric\",\"attributes\":{%v}}}",
+				strings.Join(eventMetricBuild, ",")))
+	}
+
+	if params.Value != nil {
+		ratio := math.Pow(10, float64(4))
+		value := math.Round(float64(*params.Value)/100*ratio) / ratio
+		// eventBuild = append(eventBuild, "\"value\":100.00")
+		eventBuild = append(eventBuild, fmt.Sprintf("\"value\":%.2f", value))
 	}
 
 	// Profile
@@ -136,12 +145,6 @@ func (s *EventServiceOp) Create(ctx context.Context, params CreateEvent) (*Event
 		var eventProfileBuild []string
 		if createEventProfile.Email != nil {
 			eventProfileBuild = append(eventProfileBuild, "\"email\":\""+*createEventProfile.Email+"\"")
-		}
-		if createEventProfile.Value != nil {
-			ratio := math.Pow(10, float64(4))
-			value := math.Round(float64(*createEventProfile.Value)/100*ratio) / ratio
-			// eventBuild = append(eventBuild, "\"value\":100.00")
-			eventBuild = append(eventBuild, fmt.Sprintf("\"value\":%.2f", value))
 		}
 		eventBuild = append(eventBuild,
 			fmt.Sprintf("\"profile\":{\"data\":{\"type\":\"profile\",\"attributes\":{%v}}}", strings.Join(eventProfileBuild, ",")))

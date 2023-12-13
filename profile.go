@@ -61,18 +61,20 @@ type CreateProfile struct {
 	Title        *string
 	Image        *string
 	Properties   *map[string]string
-	Location     *struct {
-		Address1  *string
-		Address2  *string
-		City      *string
-		Country   *string
-		Latitude  *string
-		Longitude *string
-		Region    *string
-		Zip       *string
-		Timezone  *string
-		IP        *string
-	}
+	Location     *CreateProfileLocation
+}
+
+type CreateProfileLocation struct {
+	Address1  *string
+	Address2  *string
+	City      *string
+	Country   *string
+	Latitude  *string
+	Longitude *string
+	Region    *string
+	Zip       *string
+	Timezone  *string
+	IP        *string
 }
 
 type ProfileResponse struct {
