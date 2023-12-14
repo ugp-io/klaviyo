@@ -2,7 +2,6 @@ package klaviyo
 
 import (
 	"context"
-	"fmt"
 	"strings"
 )
 
@@ -13,8 +12,8 @@ type TagServiceOp struct {
 type TagService interface {
 	Read(context.Context, ReadTagRequest) (*TagResponse, error)
 	Browse(context.Context, BrowseTagRequest) (*TagResponses, error)
-	Edit(context.Context, EditTagRequest) (*TagResponse, error)
-	Create(context.Context, CreateTagRequest) (*TagResponse, error)
+	Edit(context.Context, EditTag) (*TagResponse, error)
+	Create(context.Context, CreateTag) (*TagResponse, error)
 }
 
 type BrowseTagRequest struct {
@@ -25,14 +24,45 @@ type ReadTagRequest struct {
 	ID string
 }
 
-type EditTagRequest struct {
-	ID            string
-	AttributeName *string
+type EditTag struct {
+	Data EditTagData `json:"data,omitempty"`
 }
 
-type CreateTagRequest struct {
-	Name       string
-	TagGroupID *string
+type EditTagData struct {
+	Type       string             `json:"type,omitempty"`
+	ID         string             `json:"id,omitempty"`
+	Attributes *EditTagAttributes `json:"attributes,omitempty"`
+}
+
+type EditTagAttributes struct {
+	Name *string `json:"name,omitempty"`
+}
+
+type CreateTag struct {
+	Data CreateTagData `json:"data,omitempty"`
+}
+
+type CreateTagData struct {
+	Type          string                  `json:"type,omitempty"`
+	Attributes    *CreateTagAttributes    `json:"attributes,omitempty"`
+	Relationships *CreateTagRelationships `json:"relationships,omitempty"`
+}
+
+type CreateTagAttributes struct {
+	Name *string `json:"name,omitempty"`
+}
+
+type CreateTagRelationships struct {
+	TagGroup *CreateTagTagGroup `json:"tag-group,omitempty"`
+}
+
+type CreateTagTagGroup struct {
+	Data *CreateTagTagGroupData `json:"data,omitempty"`
+}
+
+type CreateTagTagGroupData struct {
+	Type string  `json:"type,omitempty"`
+	ID   *string `json:"id,omitempty"`
 }
 
 type TagResponse struct {
@@ -95,24 +125,12 @@ func (s *TagServiceOp) Browse(ctx context.Context, params BrowseTagRequest) (*Ta
 	return &resp, nil
 }
 
-func (s *TagServiceOp) Edit(ctx context.Context, params EditTagRequest) (*TagResponse, error) {
+func (s *TagServiceOp) Edit(ctx context.Context, params EditTag) (*TagResponse, error) {
 
 	var resp TagResponse
-	payloadBuild := []string{
-		"\"type\":\"tag\"",
-		"\"id\":\"" + params.ID + "\"",
-	}
-	url := tagURL + params.ID
+	url := tagURL + params.Data.ID
 
-	if params.AttributeName != nil {
-		payloadBuild = append(payloadBuild,
-			fmt.Sprintf("\"attributes\":{\"name\":\"%v\"}", *params.AttributeName))
-	}
-
-	payloadString := fmt.Sprintf("{\"data\":{%v}}", strings.Join(payloadBuild, ","))
-	payload := strings.NewReader(payloadString)
-
-	errRequest := s.client.Request("PATCH", url, *payload, nil)
+	errRequest := s.client.Request("PATCH", url, params, nil)
 	if errRequest != nil {
 		return nil, errRequest
 	}
@@ -120,23 +138,11 @@ func (s *TagServiceOp) Edit(ctx context.Context, params EditTagRequest) (*TagRes
 	return &resp, nil
 }
 
-func (s *TagServiceOp) Create(ctx context.Context, params CreateTagRequest) (*TagResponse, error) {
+func (s *TagServiceOp) Create(ctx context.Context, params CreateTag) (*TagResponse, error) {
 
 	var resp TagResponse
-	payloadBuild := []string{
-		"\"type\":\"tag\"",
-		"\"attributes\":{\"name\":\"" + params.Name + "\"}",
-	}
 
-	if params.TagGroupID != nil {
-		payloadBuild = append(payloadBuild,
-			fmt.Sprintf("\"relationships\":{\"tag-group\":{\"data\":{\"type\":\"tag-group\",\"id\":\"%v\"}}}", *params.TagGroupID))
-	}
-
-	payloadString := fmt.Sprintf("{\"data\":{%v}}", strings.Join(payloadBuild, ","))
-	payload := strings.NewReader(payloadString)
-
-	errRequest := s.client.Request("POST", tagURL, *payload, &resp)
+	errRequest := s.client.Request("POST", tagURL, params, &resp)
 	if errRequest != nil {
 		return nil, errRequest
 	}

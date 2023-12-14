@@ -3,7 +3,6 @@ package klaviyo
 import (
 	"context"
 	"fmt"
-	"math"
 	"strings"
 )
 
@@ -57,17 +56,21 @@ type BrowseRequest struct {
 }
 
 type CreateEvent struct {
-	CreateEventProperties *map[string]string
-	Time                  *string
-	Value                 *int
-	UniqueID              *string
-	CreateEventMetric     *CreateEventMetric
-	CreateEventProfile    *CreateProfile
+	Data CreateEventData `json:"data,omitempty"`
 }
 
-type CreateEventMetric struct {
-	Name    string
-	Service *string
+type CreateEventData struct {
+	Type       string                 `json:"type,omitempty"`
+	Attributes *CreateEventAttributes `json:"attributes,omitempty"`
+}
+
+type CreateEventAttributes struct {
+	Properties *map[string]string `json:"properties,omitempty"`
+	Time       *string            `json:"time,omitempty"`
+	Value      *int               `json:"value,omitempty"`
+	UniqueID   *string            `json:"unique_id,omitempty"`
+	Metric     *CreateMetric      `json:"metric,omitempty"`
+	Profile    *CreateProfile     `json:"profile,omitempty"`
 }
 
 const eventURL = "https://a.klaviyo.com/api/events/"
@@ -100,64 +103,8 @@ func (s *EventServiceOp) Browse(ctx context.Context, params BrowseRequest) (*Eve
 func (s *EventServiceOp) Create(ctx context.Context, params CreateEvent) (*EventResponse, error) {
 
 	var resp EventResponse
-	var eventBuild []string
 
-	// Property
-	if params.CreateEventProperties != nil {
-		createEventProperties := *params.CreateEventProperties
-		var eventPropertiesBuild []string
-		for createEventPropertyKey, createEventProperty := range createEventProperties {
-			eventPropertiesBuild = append(eventPropertiesBuild, "\""+createEventPropertyKey+"\":\""+createEventProperty+"\"")
-		}
-
-		eventBuild = append(eventBuild,
-			fmt.Sprintf("\"properties\":{%v}", strings.Join(eventPropertiesBuild, ",")))
-	}
-
-	// Metric
-	if params.CreateEventMetric != nil {
-		createEventMetric := params.CreateEventMetric
-
-		eventMetricBuild := []string{
-			"\"name\":\"" + createEventMetric.Name + "\"",
-		}
-
-		if createEventMetric.Service != nil {
-			eventMetricBuild = append(eventMetricBuild,
-				"\"service\":\""+*createEventMetric.Service+"\"")
-		}
-		eventBuild = append(eventBuild,
-			fmt.Sprintf("\"metric\":{\"data\":{\"type\":\"metric\",\"attributes\":{%v}}}",
-				strings.Join(eventMetricBuild, ",")))
-	}
-
-	if params.Value != nil {
-		ratio := math.Pow(10, float64(4))
-		value := math.Round(float64(*params.Value)/100*ratio) / ratio
-		// eventBuild = append(eventBuild, "\"value\":100.00")
-		eventBuild = append(eventBuild, fmt.Sprintf("\"value\":%.2f", value))
-	}
-
-	// Profile
-	if params.CreateEventProfile != nil {
-		createEventProfile := params.CreateEventProfile
-
-		var eventProfileBuild []string
-		if createEventProfile.Email != nil {
-			eventProfileBuild = append(eventProfileBuild, "\"email\":\""+*createEventProfile.Email+"\"")
-		}
-		eventBuild = append(eventBuild,
-			fmt.Sprintf("\"profile\":{\"data\":{\"type\":\"profile\",\"attributes\":{%v}}}", strings.Join(eventProfileBuild, ",")))
-	}
-
-	if params.UniqueID != nil {
-		eventBuild = append(eventBuild, "\"unique_id\":\""+*params.UniqueID+"\"")
-	}
-
-	payloadString := fmt.Sprintf("{\"data\":{\"type\":\"event\",\"attributes\":{%v}}}", strings.Join(eventBuild, ","))
-	payload := strings.NewReader(payloadString)
-
-	errRequest := s.client.Request("POST", eventURL, *payload, &resp)
+	errRequest := s.client.Request("POST", eventURL, params, &resp)
 	if errRequest != nil {
 		return nil, errRequest
 	}

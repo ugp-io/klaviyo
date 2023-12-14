@@ -42,6 +42,20 @@ type MetricRequest struct {
 	ID *string
 }
 
+type CreateMetric struct {
+	Data CreateMetricData `json:"data,omitempty"`
+}
+
+type CreateMetricData struct {
+	Type       string                  `json:"type,omitempty"`
+	Attributes *CreateMetricAttributes `json:"attributes,omitempty"`
+}
+
+type CreateMetricAttributes struct {
+	Name    *string `json:"name,omitempty"`
+	Service *string `json:"service,omitempty"`
+}
+
 const metricURL = "https://a.klaviyo.com/api/metrics/"
 
 func (s *MetricServiceOp) Read(ctx context.Context, params MetricRequest) (*MetricResponse, error) {

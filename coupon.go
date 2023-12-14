@@ -18,12 +18,12 @@ type CouponCodeServiceOp struct {
 type CouponService interface {
 	Read(context.Context, ReadCouponRequest) (*CouponResponse, error)
 	Browse(context.Context, BrowseCouponRequest) (*CouponResponses, error)
-	Edit(context.Context, EditCouponRequest) (*CouponResponse, error)
-	Create(context.Context, CreateCouponRequest) (*CouponResponse, error)
+	Edit(context.Context, EditCoupon) (*CouponResponse, error)
+	Create(context.Context, CreateCoupon) (*CouponResponse, error)
 	ReadCode(context.Context, ReadCouponCodeRequest) (*CouponCodeResponse, error)
 	BrowseCodes(context.Context, BrowseCouponCodeRequest) (*CouponCodeResponses, error)
-	EditCode(context.Context, EditCouponCodeRequest) (*CouponCodeResponse, error)
-	CreateCode(context.Context, CreateCouponCodeRequest) (*CouponCodeResponse, error)
+	EditCode(context.Context, EditCouponCode) (*CouponCodeResponse, error)
+	CreateCode(context.Context, CreateCouponCode) (*CouponCodeResponse, error)
 }
 
 type BrowseCouponRequest struct {
@@ -33,14 +33,32 @@ type ReadCouponRequest struct {
 	ID string
 }
 
-type EditCouponRequest struct {
-	ID          string
-	Description *string
+type EditCoupon struct {
+	Data EditCouponData `json:"data,omitempty"`
 }
 
-type CreateCouponRequest struct {
-	ExternalID  string
-	Description *string
+type EditCouponData struct {
+	Type       string                `json:"type,omitempty"`
+	ID         string                `json:"id,omitempty"`
+	Attributes *EditCouponAttributes `json:"attributes,omitempty"`
+}
+
+type EditCouponAttributes struct {
+	Description *string `json:"description,omitempty"`
+}
+
+type CreateCoupon struct {
+	Data CreateCouponData `json:"data,omitempty"`
+}
+
+type CreateCouponData struct {
+	Type       string                  `json:"type,omitempty"`
+	Attributes *CreateCouponAttributes `json:"attributes,omitempty"`
+}
+
+type CreateCouponAttributes struct {
+	ExternalID  *string `json:"external_id,omitempty"`
+	Description *string `json:"description,omitempty"`
 }
 
 type CouponResponse struct {
@@ -73,16 +91,47 @@ type ReadCouponCodeRequest struct {
 	ID string
 }
 
-type EditCouponCodeRequest struct {
-	ID        string
-	Status    *string
-	ExpiresAt *string
+type EditCouponCode struct {
+	Data EditCouponCodeData `json:"data,omitempty"`
 }
 
-type CreateCouponCodeRequest struct {
-	Code     string
-	CouponID string
-	ExiredAt *string
+type EditCouponCodeData struct {
+	Type       string                    `json:"type,omitempty"`
+	ID         string                    `json:"id,omitempty"`
+	Attributes *EditCouponCodeAttributes `json:"attributes,omitempty"`
+}
+
+type EditCouponCodeAttributes struct {
+	Status    *string `json:"status,omitempty"`
+	ExpiresAt *string `json:"expires_at,omitempty"`
+}
+
+type CreateCouponCode struct {
+	Data CreateCouponCodeData `json:"data,omitempty"`
+}
+
+type CreateCouponCodeData struct {
+	Type          string                         `json:"type,omitempty"`
+	Attributes    *CreateCouponCodeAttributes    `json:"attributes,omitempty"`
+	Relationships *CreateCouponCodeRelationships `json:"relationships,omitempty"`
+}
+
+type CreateCouponCodeAttributes struct {
+	UniqueCode *string `json:"unique_code,omitempty"`
+	ExpiresAt  *string `json:"expires_at,omitempty"`
+}
+
+type CreateCouponCodeRelationships struct {
+	Coupon *CreateCouponCodeCoupon `json:"coupon,omitempty"`
+}
+
+type CreateCouponCodeCoupon struct {
+	Data *CreateCouponCodeCouponData `json:"data,omitempty"`
+}
+
+type CreateCouponCodeCouponData struct {
+	Type string  `json:"type,omitempty"`
+	ID   *string `json:"id,omitempty"`
 }
 
 type CouponCodeResponse struct {
@@ -138,24 +187,12 @@ func (s *CouponServiceOp) Browse(ctx context.Context, params BrowseCouponRequest
 	return &resp, nil
 }
 
-func (s *CouponServiceOp) Edit(ctx context.Context, params EditCouponRequest) (*CouponResponse, error) {
+func (s *CouponServiceOp) Edit(ctx context.Context, params EditCoupon) (*CouponResponse, error) {
 
 	var resp CouponResponse
-	url := fmt.Sprintf("%v%v", couponURL, params.ID)
-	payloadBuild := []string{
-		"\"type\":\"coupon\"",
-		"\"id\":\"" + params.ID + "\"",
-	}
+	url := fmt.Sprintf("%v%v", couponURL, params.Data.ID)
 
-	if params.Description != nil {
-		payloadBuild = append(payloadBuild,
-			fmt.Sprintf("\"attributes\":{\"description\":\"%v\"}", *params.Description))
-	}
-
-	payloadString := fmt.Sprintf("{\"data\":{%v}}", strings.Join(payloadBuild, ","))
-	payload := strings.NewReader(payloadString)
-
-	errRequest := s.client.Request("PATCH", url, *payload, nil)
+	errRequest := s.client.Request("PATCH", url, params, nil)
 	if errRequest != nil {
 		return nil, errRequest
 	}
@@ -163,28 +200,11 @@ func (s *CouponServiceOp) Edit(ctx context.Context, params EditCouponRequest) (*
 	return &resp, nil
 }
 
-func (s *CouponServiceOp) Create(ctx context.Context, params CreateCouponRequest) (*CouponResponse, error) {
+func (s *CouponServiceOp) Create(ctx context.Context, params CreateCoupon) (*CouponResponse, error) {
 
 	var resp CouponResponse
-	payloadBuild := []string{
-		"\"type\":\"coupon\"",
-	}
-	attributeBuild := []string{
-		"\"external_id\":\"" + params.ExternalID + "\"",
-	}
 
-	if params.Description != nil {
-		attributeBuild = append(attributeBuild,
-			fmt.Sprintf("\"description\":\"%v\"", *params.Description))
-	}
-
-	payloadBuild = append(payloadBuild,
-		fmt.Sprintf("\"attributes\":{%v}", strings.Join(attributeBuild, ",")))
-
-	payloadString := fmt.Sprintf("{\"data\":{%v}}", strings.Join(payloadBuild, ","))
-	payload := strings.NewReader(payloadString)
-
-	errRequest := s.client.Request("POST", couponURL, *payload, &resp)
+	errRequest := s.client.Request("POST", couponURL, params, &resp)
 	if errRequest != nil {
 		return nil, errRequest
 	}
@@ -231,33 +251,12 @@ func (s *CouponServiceOp) BrowseCodes(ctx context.Context, params BrowseCouponCo
 	return &resp, nil
 }
 
-func (s *CouponServiceOp) EditCode(ctx context.Context, params EditCouponCodeRequest) (*CouponCodeResponse, error) {
+func (s *CouponServiceOp) EditCode(ctx context.Context, params EditCouponCode) (*CouponCodeResponse, error) {
 
 	var resp CouponCodeResponse
-	url := fmt.Sprintf("%v%v", couponCodeURL, params.ID)
-	payloadBuild := []string{
-		"\"type\":\"coupon-code\"",
-		"\"id\":\"" + params.ID + "\"",
-	}
+	url := fmt.Sprintf("%v%v", couponCodeURL, params.Data.ID)
 
-	var attributeBuild []string
-	if params.ExpiresAt != nil {
-		attributeBuild = append(attributeBuild,
-			fmt.Sprintf("\"expires_at\":\"%v\"", *params.ExpiresAt))
-	}
-
-	if params.Status != nil {
-		attributeBuild = append(attributeBuild,
-			fmt.Sprintf("\"status\":\"%v\"", *params.Status))
-	}
-
-	payloadBuild = append(payloadBuild,
-		fmt.Sprintf("\"attributes\":{%v}", strings.Join(attributeBuild, ",")))
-
-	payloadString := fmt.Sprintf("{\"data\":{%v}}", strings.Join(payloadBuild, ","))
-	payload := strings.NewReader(payloadString)
-
-	errRequest := s.client.Request("PATCH", url, *payload, nil)
+	errRequest := s.client.Request("PATCH", url, params, nil)
 	if errRequest != nil {
 		return nil, errRequest
 	}
@@ -265,28 +264,11 @@ func (s *CouponServiceOp) EditCode(ctx context.Context, params EditCouponCodeReq
 	return &resp, nil
 }
 
-func (s *CouponServiceOp) CreateCode(ctx context.Context, params CreateCouponCodeRequest) (*CouponCodeResponse, error) {
+func (s *CouponServiceOp) CreateCode(ctx context.Context, params CreateCouponCode) (*CouponCodeResponse, error) {
 
 	var resp CouponCodeResponse
-	payloadBuild := []string{
-		"\"type\":\"coupon-code\"",
-		"\"relationships\":{\"coupon\":{\"data\":{\"type\":\"coupon\",\"id\":\"" + params.CouponID + "\"}}}",
-	}
 
-	attributesBuild := []string{
-		"\"unique_code\":\"" + params.Code + "\"",
-	}
-	if params.ExiredAt != nil {
-		attributesBuild = append(attributesBuild,
-			fmt.Sprintf("\"expires_at\":\"%v\"", *params.ExiredAt))
-	}
-	payloadBuild = append(payloadBuild,
-		fmt.Sprintf("\"attributes\":{%v}", strings.Join(attributesBuild, ",")))
-
-	payloadString := fmt.Sprintf("{\"data\":{%v}}", strings.Join(payloadBuild, ","))
-	payload := strings.NewReader(payloadString)
-
-	errRequest := s.client.Request("POST", couponCodeURL, *payload, &resp)
+	errRequest := s.client.Request("POST", couponCodeURL, params, &resp)
 	if errRequest != nil {
 		return nil, errRequest
 	}
