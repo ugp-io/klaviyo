@@ -81,7 +81,7 @@ type TagResponseData struct {
 	Type          *string                `json:"type,omitempty"`
 	Attributes    *TagResponseAttributes `json:"attributes,omitempty"`
 	Links         *map[string]string     `json:"links,omitempty"`
-	Relationships *interface{}           `json:"relationships,omitempty"`
+	Relationships interface{}            `json:"relationships,omitempty"`
 }
 
 type TagIncluded struct {

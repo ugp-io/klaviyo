@@ -149,7 +149,7 @@ type CouponCodeResponseData struct {
 	Type          *string                       `json:"type,omitempty"`
 	Attributes    *CouponCodeResponseAttributes `json:"attributes,omitempty"`
 	Links         *map[string]string            `json:"links,omitempty"`
-	Relationships *interface{}                  `json:"relationships,omitempty"`
+	Relationships interface{}                   `json:"relationships,omitempty"`
 }
 
 type CouponCodeResponseAttributes struct {

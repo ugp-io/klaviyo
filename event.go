@@ -65,7 +65,7 @@ type CreateEventData struct {
 }
 
 type CreateEventAttributes struct {
-	Properties *interface{}   `json:"properties,omitempty"`
+	Properties interface{}    `json:"properties,omitempty"`
 	Time       *string        `json:"time,omitempty"`
 	Value      *int           `json:"value,omitempty"`
 	UniqueID   *string        `json:"unique_id,omitempty"`

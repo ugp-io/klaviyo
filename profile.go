@@ -43,7 +43,7 @@ type EditProfileAttributes struct {
 	Title        *string              `json:"title,omitempty"`
 	Image        *string              `json:"image,omitempty"`
 	Location     *EditProfileLocation `json:"location,omitempty"`
-	Properties   *interface{}         `json:"properties,omitempty"`
+	Properties   interface{}          `json:"properties,omitempty"`
 }
 
 type EditProfileLocation struct {
@@ -64,9 +64,9 @@ type EditProfileMeta struct {
 }
 
 type EditProfileMetaPatchProperties struct {
-	Unset    *string      `json:"unset,omitempty"`
-	Append   *interface{} `json:"append,omitempty"`
-	Unappend *interface{} `json:"unappend,omitempty"`
+	Unset    *string     `json:"unset,omitempty"`
+	Append   interface{} `json:"append,omitempty"`
+	Unappend interface{} `json:"unappend,omitempty"`
 }
 
 type CreateProfile struct {
@@ -132,7 +132,7 @@ type ProfileResponseAttributes struct {
 	Created             string                              `json:"created,omitempty"`
 	Updated             string                              `json:"updated,omitempty"`
 	LastEventDate       string                              `json:"last_event_date,omitempty"`
-	Properties          *interface{}                        `json:"properties,omitempty"`
+	Properties          interface{}                         `json:"properties,omitempty"`
 	Location            *ProfileResponseLocation            `json:"location,omitempty"`
 	Subscriptions       *ProfileResponseSubscriptions       `json:"subscriptions,omitempty"`
 	PredictiveAnalytics *ProfileResponsePredictiveAnalytics `json:"predictive_analytics,omitempty"`
