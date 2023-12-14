@@ -65,12 +65,12 @@ type CreateEventData struct {
 }
 
 type CreateEventAttributes struct {
-	Properties *map[string]string `json:"properties,omitempty"`
-	Time       *string            `json:"time,omitempty"`
-	Value      *int               `json:"value,omitempty"`
-	UniqueID   *string            `json:"unique_id,omitempty"`
-	Metric     *CreateMetric      `json:"metric,omitempty"`
-	Profile    *CreateProfile     `json:"profile,omitempty"`
+	Properties *interface{}   `json:"properties,omitempty"`
+	Time       *string        `json:"time,omitempty"`
+	Value      *int           `json:"value,omitempty"`
+	UniqueID   *string        `json:"unique_id,omitempty"`
+	Metric     *CreateMetric  `json:"metric,omitempty"`
+	Profile    *CreateProfile `json:"profile,omitempty"`
 }
 
 const eventURL = "https://a.klaviyo.com/api/events/"
