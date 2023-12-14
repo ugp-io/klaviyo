@@ -102,12 +102,12 @@ func (s *EventServiceOp) Browse(ctx context.Context, params BrowseRequest) (*Eve
 
 func (s *EventServiceOp) Create(ctx context.Context, params CreateEvent) (*EventResponse, error) {
 
-	var resp EventResponse
+	// var resp EventResponse
 
-	errRequest := s.client.Request("POST", eventURL, params, &resp)
+	errRequest := s.client.Request("POST", eventURL, params, nil)
 	if errRequest != nil {
 		return nil, errRequest
 	}
 
-	return &resp, nil
+	return nil, nil
 }
