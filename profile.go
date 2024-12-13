@@ -3,6 +3,7 @@ package klaviyo
 import (
 	"context"
 	"strings"
+	"time"
 )
 
 type ProfileServiceOp struct {
@@ -12,7 +13,7 @@ type ProfileServiceOp struct {
 type ProfileService interface {
 	Read(context.Context, ProfileRequest) (*ProfileResponse, error)
 	Browse(context.Context, ProfileRequest) (*ProfilesResponse, error)
-	Edit(context.Context, EditProfile) (*ProfilesResponse, error)
+	Edit(context.Context, EditProfile) (*ProfileResponse, error)
 	Create(context.Context, CreateProfile) (*ProfilesResponse, error)
 }
 
@@ -43,7 +44,53 @@ type EditProfileAttributes struct {
 	Title        *string              `json:"title,omitempty"`
 	Image        *string              `json:"image,omitempty"`
 	Location     *EditProfileLocation `json:"location,omitempty"`
-	Properties   interface{}          `json:"properties,omitempty"`
+	Properties   *ProfileProperties   `json:"properties,omitempty"`
+}
+
+type ProfileProperties struct {
+	LeadGroupNumber               string      `json:"lead.group_number,omitempty"`
+	LeadDesignCount               int         `json:"lead.design_count,omitempty"`
+	LeadQuoteCount                int         `json:"lead.quote_count,omitempty"`
+	LeadStatus                    *string     `json:"lead.status,omitempty"`
+	LeadProgress                  *string     `json:"lead.progress,omitempty"`
+	LeadMinVal                    *int        `json:"lead.min_val,omitempty"`
+	LeadMaxVal                    *int        `json:"lead.max_val,omitempty"`
+	LeadAvgVal                    *int        `json:"lead.avg_val,omitempty"`
+	LeadMinCreated                *time.Time  `json:"lead.min_created,omitempty"`
+	LeadMaxCreated                *time.Time  `json:"lead.max_created,omitempty"`
+	LeadMinArrival                *time.Time  `json:"lead.min_arrival,omitempty"`
+	LeadMaxArrival                *time.Time  `json:"lead.max_arrival,omitempty"`
+	LeadAdminInitiated            *bool       `json:"lead.admin_initiated,omitempty"`
+	LeadAdminInteracted           *bool       `json:"lead.admin_interacted,omitempty"`
+	LeadCustomPricing             *bool       `json:"lead.custom_pricing,omitempty"`
+	LeadConverted                 *bool       `json:"lead.converted,omitempty"`
+	LeadPublicLink                *string     `json:"lead.public_link,omitempty"`
+	LeadEmployeeFirstName         *string     `json:"lead.employee.first_name,omitempty"`
+	LeadEmployeeLastName          *string     `json:"lead.employee.last_name,omitempty"`
+	LeadEmployeeFullName          *string     `json:"lead.employee.full_name,omitempty"`
+	LeadEmployeeEmail             *string     `json:"lead.employee.email,omitempty"`
+	LeadStoreCode                 *string     `json:"lead.store.code,omitempty"`
+	LeadStoreAddress              *string     `json:"lead.store.address,omitempty"`
+	LeadStoreEmail                *string     `json:"lead.store.email,omitempty"`
+	LeadStorePhone                *string     `json:"lead.store.phone,omitempty"`
+	LeadStoreRMEmail              *string     `json:"lead.store.RMEmail,omitempty"`
+	LeadShippingLocationFirstName *string     `json:"lead.shipping_location.first_name,omitempty"`
+	LeadShippingLocationLastName  *string     `json:"lead.shipping_location.last_name,omitempty"`
+	LeadShippingLocationFullName  *string     `json:"lead.shipping_location.full_name,omitempty"`
+	LeadShippingLocationAddress1  *string     `json:"lead.shipping_location.address1,omitempty"`
+	LeadShippingLocationAddress2  *string     `json:"lead.shipping_location.address2,omitempty"`
+	LeadShippingLocationCity      *string     `json:"lead.shipping_location.city,omitempty"`
+	LeadShippingLocationState     *string     `json:"lead.shipping_location.state,omitempty"`
+	LeadShippingLocationZip       *string     `json:"lead.shipping_location.zip,omitempty"`
+	LeadShippingLocationCountry   *string     `json:"lead.shipping_location.country,omitempty"`
+	LeadDesigns                   interface{} `json:"lead.designs,omitempty"`
+	StatsCustomerLifetimeVal      *int        `json:"stats.customer_lifetime_val,omitempty"`
+	StatsFirstOrderID             *int        `json:"stats.first_order.id,omitempty"`
+	StatsFirstOrderDate           *time.Time  `json:"stats.first_order.date,omitempty"`
+	StatsFirstOrderValue          *int        `json:"stats.first_order.value,omitempty"`
+	StatsMostRecentOrderID        *int        `json:"stats.most_recent_order.id,omitempty"`
+	StatsMostRecentOrderDate      *time.Time  `json:"stats.most_recent_order.date,omitempty"`
+	StatsMostRecentOrderValue     *int        `json:"stats.most_recent_order.value,omitempty"`
 }
 
 type EditProfileLocation struct {
@@ -70,11 +117,12 @@ type EditProfileMetaPatchProperties struct {
 }
 
 type CreateProfile struct {
-	Data CreateProfileData `json:"data,omitempty"`
+	Data *CreateProfileData `json:"data,omitempty"`
 }
 
 type CreateProfileData struct {
 	Type       string                   `json:"type,omitempty"`
+	ID         *string                  `json:"id,omitempty"`
 	Attributes *CreateProfileAttributes `json:"attributes,omitempty"`
 }
 
@@ -233,9 +281,9 @@ func (s *ProfileServiceOp) Browse(ctx context.Context, params ProfileRequest) (*
 	return &resp, nil
 }
 
-func (s *ProfileServiceOp) Edit(ctx context.Context, params EditProfile) (*ProfilesResponse, error) {
+func (s *ProfileServiceOp) Edit(ctx context.Context, params EditProfile) (*ProfileResponse, error) {
 
-	var resp ProfilesResponse
+	var resp ProfileResponse
 	url := profileURL + params.Data.ID
 
 	errRequest := s.client.Request("PATCH", url, params, &resp)
@@ -243,7 +291,7 @@ func (s *ProfileServiceOp) Edit(ctx context.Context, params EditProfile) (*Profi
 		return nil, errRequest
 	}
 
-	return nil, nil
+	return &resp, nil
 }
 
 func (s *ProfileServiceOp) Create(ctx context.Context, params CreateProfile) (*ProfilesResponse, error) {

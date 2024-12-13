@@ -43,7 +43,7 @@ type MetricRequest struct {
 }
 
 type CreateMetric struct {
-	Data CreateMetricData `json:"data,omitempty"`
+	Data *CreateMetricData `json:"data,omitempty"`
 }
 
 type CreateMetricData struct {

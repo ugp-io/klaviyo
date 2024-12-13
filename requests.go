@@ -1,10 +1,9 @@
 package klaviyo
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
 	"net/http"
+	"strings"
 )
 
 type Client struct {
@@ -35,14 +34,13 @@ func NewClient(apiKey string) *Client {
 
 func (c *Client) Request(method string, url string, body interface{}, v interface{}) error {
 
-	var bodyReader io.Reader
+	var bodyReader *strings.Reader
 	if body != nil {
 		requestJson, errMarshal := json.Marshal(body)
 		if errMarshal != nil {
 			return errMarshal
 		}
-
-		bodyReader = bytes.NewBuffer(requestJson)
+		bodyReader = strings.NewReader(string(requestJson))
 	}
 
 	httpReq, errNewRequest := http.NewRequest(method, url, bodyReader)
