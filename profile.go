@@ -86,7 +86,7 @@ type CreateProfileAttributes struct {
 	Organization *string                `json:"organization,omitempty"`
 	Title        *string                `json:"title,omitempty"`
 	Image        *string                `json:"image,omitempty"`
-	Properties   *map[string]string     `json:"properties,omitempty"`
+	Properties   interface{}            `json:"properties,omitempty"`
 	Location     *CreateProfileLocation `json:"location,omitempty"`
 }
 
